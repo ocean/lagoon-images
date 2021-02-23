@@ -29,7 +29,7 @@ SHELL := /bin/bash
 # Runs all tests together. Can be executed with `-j2` for two parallel running tests
 
 # make up
-# Starts all Lagoon Services at once, usefull for local development or just to start all of them.
+# Starts all Lagoon Services at once, useful for local development or just to start all of them.
 
 # make logs
 # Shows logs of Lagoon Services (aka docker-compose logs -f)
@@ -39,9 +39,9 @@ SHELL := /bin/bash
 #######
 
 # Parameter for all `docker build` commands, can be overwritten by passing `DOCKER_BUILD_PARAMS=` via the `-e` option
-DOCKER_BUILD_PARAMS := --quiet
+DOCKER_BUILD_PARAMS := --platform linux/arm64
 
-# On CI systems like jenkins we need a way to run multiple testings at the same time. We expect the
+# On CI systems like Jenkins we need a way to run multiple testings at the same time. We expect the
 # CI systems to define an Environment variable CI_BUILD_TAG which uniquely identifies each build.
 # If it's not set we assume that we are running local and just call it lagoon.
 CI_BUILD_TAG ?= lagoon
@@ -54,7 +54,7 @@ LAGOON_VERSION := $(shell git describe --tags --exact-match 2>/dev/null || echo 
 DOCKER_DRIVER := $(shell docker info -f '{{.Driver}}')
 
 # Name of the Branch we are currently in
-BRANCH_NAME :=
+BRANCH_NAME := 21.2.2
 
 # Init the file that is used to hold the image tag cross-reference table
 $(shell >build.txt)
@@ -68,10 +68,10 @@ $(shell >scan.txt)
 # Docker Build Context
 docker_build = docker build $(DOCKER_BUILD_PARAMS) --build-arg LAGOON_VERSION=$(LAGOON_VERSION) --build-arg IMAGE_REPO=$(CI_BUILD_TAG) -t $(CI_BUILD_TAG)/$(1) -f $(2) $(3)
 
-scan_image = docker run --rm -v /var/run/docker.sock:/var/run/docker.sock     -v $(HOME)/Library/Caches:/root/.cache/ aquasec/trivy --timeout 5m0s $(CI_BUILD_TAG)/$(1) >> scan.txt
+scan_image = docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(HOME)/Library/Caches:/root/.cache/ oceanic/trivy --timeout 5m0s $(CI_BUILD_TAG)/$(1) >> scan.txt
 
 # Tags an image with the `testlagoon` repository and pushes it
-docker_publish_testlagoon = docker tag $(CI_BUILD_TAG)/$(1) testlagoon/$(2) && docker push testlagoon/$(2) | cat
+docker_publish_testlagoon = docker tag $(CI_BUILD_TAG)/$(1) oceanic/lagoon-$(2) && docker push oceanic/lagoon-$(2) | cat
 
 # Tags an image with the `uselagoon` repository and pushes it
 docker_publish_uselagoon = docker tag $(CI_BUILD_TAG)/$(1) uselagoon/$(2) && docker push uselagoon/$(2) | cat
@@ -84,10 +84,9 @@ docker_publish_amazeeio = docker tag $(CI_BUILD_TAG)/$(1) amazeeio/$(2) && docke
 #######
 ####### Base Images are the base for all other images and are also published for clients to use during local development
 
-unversioned-images :=		commons \
+unversioned-images :=	commons \
 							mariadb \
 							mariadb-drupal \
-							mongo \
 							nginx \
 							nginx-drupal \
 							varnish \
@@ -125,28 +124,25 @@ $(build-images):
 build/commons: images/commons/Dockerfile
 build/mariadb: build/commons images/mariadb/Dockerfile
 build/mariadb-drupal: build/mariadb images/mariadb-drupal/Dockerfile
-build/mongo: build/commons images/mongo/Dockerfile
+# build/mongo: build/commons images/mongo/Dockerfile
 build/nginx: build/commons images/nginx/Dockerfile
 build/nginx-drupal: build/nginx images/nginx-drupal/Dockerfile
-build/varnish: build/commons images/varnish/Dockerfile
-build/varnish-drupal: build/varnish images/varnish-drupal/Dockerfile
-build/varnish-persistent: build/varnish images/varnish/Dockerfile
-build/varnish-persistent-drupal: build/varnish-drupal images/varnish-drupal/Dockerfile
+# build/varnish: build/commons images/varnish/Dockerfile
+# build/varnish-drupal: build/varnish images/varnish-drupal/Dockerfile
+# build/varnish-persistent: build/varnish images/varnish/Dockerfile
+# build/varnish-persistent-drupal: build/varnish-drupal images/varnish-drupal/Dockerfile
 build/toolbox: build/commons build/mariadb images/toolbox/Dockerfile
 
 #######
 ####### Multi-version Images
 #######
 
-versioned-images := 		php-7.2-fpm \
-							php-7.3-fpm \
+versioned-images := 		php-7.3-fpm \
 							php-7.4-fpm \
 							php-8.0-fpm \
-							php-7.2-cli \
 							php-7.3-cli \
 							php-7.4-cli \
 							php-8.0-cli \
-							php-7.2-cli-drupal \
 							php-7.3-cli-drupal \
 							php-7.4-cli-drupal \
 							php-8.0-cli-drupal \
@@ -155,39 +151,28 @@ versioned-images := 		php-7.2-fpm \
 							python-3.8 \
 							python-2.7-ckan \
 							python-2.7-ckandatapusher \
-							node-10 \
 							node-12 \
 							node-14 \
-							node-10-builder \
 							node-12-builder \
 							node-14-builder \
-							solr-5.5 \
 							solr-6.6 \
 							solr-7.7 \
-							solr-5.5-drupal \
 							solr-6.6-drupal \
 							solr-7.7-drupal \
-							solr-5.5-ckan \
 							solr-6.6-ckan \
-							elasticsearch-6 \
-							elasticsearch-7 \
-							kibana-6 \
-							kibana-7 \
-							logstash-6 \
-							logstash-7 \
-							postgres-12 \
 							redis-6 \
 							redis-6-persistent
 
 # newly-versioned-images are images that formerly had no versioning, and are made backwards-compatible.
 
-newly-versioned-images := 	postgres-11 \
-							postgres-11-ckan \
-							postgres-11-drupal \
-							redis-5 \
-							redis-5-persistent
+# newly-versioned-images := 	postgres-11 \
+# 							postgres-11-ckan \
+# 							postgres-11-drupal \
+# 							redis-5 \
+# 							redis-5-persistent
 
-build-versioned-images = $(foreach image,$(versioned-images) $(newly-versioned-images),build/$(image))
+# build-versioned-images = $(foreach image,$(versioned-images) $(newly-versioned-images),build/$(image))
+build-versioned-images = $(foreach image,$(versioned-images),build/$(image))
 
 # Define the make recipe for all multi images
 $(build-versioned-images):

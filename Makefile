@@ -29,7 +29,7 @@ SHELL := /bin/bash
 # Runs all tests together. Can be executed with `-j2` for two parallel running tests
 
 # make up
-# Starts all Lagoon Services at once, usefull for local development or just to start all of them.
+# Starts all Lagoon Services at once, useful for local development or just to start all of them.
 
 # make logs
 # Shows logs of Lagoon Services (aka docker-compose logs -f)
@@ -39,9 +39,9 @@ SHELL := /bin/bash
 #######
 
 # Parameter for all `docker build` commands, can be overwritten by passing `DOCKER_BUILD_PARAMS=` via the `-e` option
-DOCKER_BUILD_PARAMS := --quiet
+DOCKER_BUILD_PARAMS := --platform linux/arm64
 
-# On CI systems like jenkins we need a way to run multiple testings at the same time. We expect the
+# On CI systems like Jenkins we need a way to run multiple testings at the same time. We expect the
 # CI systems to define an Environment variable CI_BUILD_TAG which uniquely identifies each build.
 # If it's not set we assume that we are running local and just call it lagoon.
 CI_BUILD_TAG ?= lagoon
@@ -54,7 +54,7 @@ LAGOON_VERSION := $(shell git describe --tags --exact-match 2>/dev/null || echo 
 DOCKER_DRIVER := $(shell docker info -f '{{.Driver}}')
 
 # Name of the Branch we are currently in
-BRANCH_NAME :=
+BRANCH_NAME := 21.2.2
 
 # Skip image scanning by default to make building images substantially faster
 SCAN_IMAGES ?= false
@@ -80,7 +80,7 @@ else
 endif
 
 # Tags an image with the `testlagoon` repository and pushes it
-docker_publish_testlagoon = docker tag $(CI_BUILD_TAG)/$(1) testlagoon/$(2) && docker push testlagoon/$(2) | cat
+docker_publish_testlagoon = docker tag $(CI_BUILD_TAG)/$(1) oceanic/lagoon-$(2) && docker push oceanic/lagoon-$(2) | cat
 
 # Tags an image with the `uselagoon` repository and pushes it
 docker_publish_uselagoon = docker tag $(CI_BUILD_TAG)/$(1) uselagoon/$(2) && docker push uselagoon/$(2) | cat

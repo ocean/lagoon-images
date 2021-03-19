@@ -85,7 +85,7 @@ docker_publish_amazeeio = docker tag $(CI_BUILD_TAG)/$(1) amazeeio/$(2) && docke
 #######
 ####### Base Images are the base for all other images and are also published for clients to use during local development
 
-unversioned-images :=	commons \
+unversioned-images :=	    commons \
 							mariadb \
 							mariadb-drupal \
 							nginx \
@@ -162,7 +162,9 @@ versioned-images := 		php-7.3-fpm \
 							solr-7.7-drupal \
 							solr-6.6-ckan \
 							redis-6 \
-							redis-6-persistent
+							redis-6-persistent \
+							solr-7 \
+							solr-7-drupal
 
 # newly-versioned-images are images that formerly had no versioning, and are made backwards-compatible.
 
@@ -227,6 +229,8 @@ build/redis-5 build/redis-6: build/commons
 build/redis-5-persistent: build/redis-5
 build/redis-5 build/redis-6: build/commons
 build/redis-6-persistent: build/redis-6
+build/solr-7: build/commons
+build/solr-7-drupal: build/solr-7
 
 #######
 ####### Building Images

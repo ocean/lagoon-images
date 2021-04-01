@@ -94,9 +94,16 @@ RUN apk add --no-cache fcgi \
 # RUN sed -i '1s/^/;Intentionally disabled. Enable via setting env variable XDEBUG_ENABLE to true\n;/' /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
 RUN rm -rf /var/cache/apk/* /tmp/pear/ \
     && apk del .phpize-deps \
-    # && echo "extension=yaml.so" > /usr/local/etc/php/conf.d/yaml.ini \
-    # NewRelic not PHP8 compatible yet
-    # && mkdir -p /tmp/newrelic && cd /tmp/newrelic \
+    && echo "extension=yaml.so" > /usr/local/etc/php/conf.d/yaml.ini \
+    && mkdir -p /app \
+    && fix-permissions /usr/local/etc/ \
+    && fix-permissions /app \
+    && fix-permissions /etc/ssmtp/ssmtp.conf
+
+# Add New Relic extension if on supported architecture (currently only amd64).
+# NewRelic not PHP8 compatible yet
+# RUN if [ "$TARGETARCH" = "amd64" ] ; then \
+    # cd / && mkdir -p /tmp/newrelic && cd /tmp/newrelic \
     # && wget https://download.newrelic.com/php_agent/archive/${NEWRELIC_VERSION}/newrelic-php5-${NEWRELIC_VERSION}-linux-musl.tar.gz \
     # && gzip -dc newrelic-php5-${NEWRELIC_VERSION}-linux-musl.tar.gz | tar --strip-components=1 -xf - \
     # && NR_INSTALL_USE_CP_NOT_LN=1 NR_INSTALL_SILENT=1 ./newrelic-install install \
@@ -110,15 +117,12 @@ RUN rm -rf /var/cache/apk/* /tmp/pear/ \
     # && sed -i -e "s/newrelic.daemon.logfile = .*/newrelic.daemon.logfile = \"\/dev\/stdout\"/" /usr/local/etc/php/conf.d/newrelic.ini \
     # && mv /usr/local/etc/php/conf.d/newrelic.ini /usr/local/etc/php/conf.d/newrelic.disable \
     # && cd / && rm -rf /tmp/newrelic \
-    && mkdir -p /app \
-    && fix-permissions /usr/local/etc/ \
-    && fix-permissions /app \
-    && fix-permissions /etc/ssmtp/ssmtp.conf
+    # && fix-permissions /usr/local/etc/ ; fi
 
 # Add blackfire probe.
 RUN version=$(php -r "echo PHP_MAJOR_VERSION.PHP_MINOR_VERSION;") \
     && mkdir -p /blackfire \
-    && curl -A "Docker" -o /blackfire/blackfire-probe.tar.gz -D - -L -s https://blackfire.io/api/v1/releases/probe/php/alpine/amd64/$version \
+    && curl -A "Docker" -o /blackfire/blackfire-probe.tar.gz -D - -L -s https://blackfire.io/api/v1/releases/probe/php/alpine/$TARGETARCH/$version \
     && tar zxpf /blackfire/blackfire-probe.tar.gz -C /blackfire \
     && mv /blackfire/blackfire-*.so $(php -r "echo ini_get('extension_dir');")/blackfire.so \
     && rm -rf /blackfire

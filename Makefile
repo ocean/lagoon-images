@@ -39,22 +39,23 @@ SHELL := /bin/bash
 #######
 
 # Parameter for all `docker build` commands, can be overwritten by passing `DOCKER_BUILD_PARAMS=` via the `-e` option
-DOCKER_BUILD_PARAMS := --platform linux/arm64
+DOCKER_BUILD_PARAMS := --platform linux/amd64,linux/arm64 --push
 
 # On CI systems like Jenkins we need a way to run multiple testings at the same time. We expect the
 # CI systems to define an Environment variable CI_BUILD_TAG which uniquely identifies each build.
 # If it's not set we assume that we are running local and just call it lagoon.
-CI_BUILD_TAG ?= lagoon
+CI_BUILD_TAG ?= oceaniclagoon
 DESTINATION_REPO ?= testlagoon
 DESTINATION_TAG ?= latest
 
 # Local environment
 ARCH := $(shell uname | tr '[:upper:]' '[:lower:]')
-LAGOON_VERSION := $(shell git describe --tags --exact-match 2>/dev/null || echo development )
+# LAGOON_VERSION := $(shell git describe --tags --exact-match 2>/dev/null || echo development )
+LAGOON_VERSION := 21.3.0
 DOCKER_DRIVER := $(shell docker info -f '{{.Driver}}')
 
 # Name of the Branch we are currently in
-BRANCH_NAME := 21.2.2
+BRANCH_NAME := 21.3.0
 
 # Init the file that is used to hold the image tag cross-reference table
 $(shell >build.txt)
@@ -66,9 +67,9 @@ $(shell >scan.txt)
 
 # Builds a docker image. Expects as arguments: name of the image, location of Dockerfile, path of
 # Docker Build Context
-docker_build = docker build $(DOCKER_BUILD_PARAMS) --build-arg LAGOON_VERSION=$(LAGOON_VERSION) --build-arg IMAGE_REPO=$(CI_BUILD_TAG) -t $(CI_BUILD_TAG)/$(1) -f $(2) $(3)
+docker_build = docker buildx build $(DOCKER_BUILD_PARAMS) --label lagoon.version=$(LAGOON_VERSION) --build-arg LAGOON_VERSION=$(LAGOON_VERSION) --build-arg IMAGE_REPO=$(CI_BUILD_TAG) -t $(CI_BUILD_TAG)/$(1):$(LAGOON_VERSION) -t $(CI_BUILD_TAG)/$(1) -f $(2) $(3)
 
-scan_image = docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(HOME)/Library/Caches:/root/.cache/ oceanic/trivy --timeout 5m0s $(CI_BUILD_TAG)/$(1) >> scan.txt
+scan_image = docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(HOME)/Library/Caches:/root/.cache/ oceanic/trivy --timeout 5m0s $(CI_BUILD_TAG)/$(1):$(LAGOON_VERSION) >> scan.txt
 
 # Tags an image with the `testlagoon` repository and pushes it
 docker_publish_testlagoon = docker tag $(CI_BUILD_TAG)/$(1) oceanic/lagoon-$(2) && docker push oceanic/lagoon-$(2) | cat

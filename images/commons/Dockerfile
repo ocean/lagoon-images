@@ -9,7 +9,7 @@ RUN GIT_TAG=github.com/kreuzwerker/envplate@1.0.0-RC1 GIT_COMMIT=977cb694fd31dd8
     && go mod init github.com/kreuzwerker/envplate \
     && go install -mod=mod ./bin/ep.go
 
-FROM alpine:3.12.5
+FROM alpine:3.12
 
 LABEL maintainer="amazee.io"
 

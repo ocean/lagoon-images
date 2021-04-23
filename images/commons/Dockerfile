@@ -11,8 +11,8 @@ RUN GIT_TAG=github.com/kreuzwerker/envplate@1.0.0-RC1 GIT_COMMIT=977cb694fd31dd8
 
 FROM alpine:3.12.7
 
-LABEL org.opencontainers.image.authors="The Lagoon Authors"
-LABEL org.opencontainers.image.source=https://github.com/uselagoon/lagoon-images
+LABEL org.opencontainers.image.authors="The Lagoon Authors" maintainer="The Lagoon Authors"
+LABEL org.opencontainers.image.source="https://github.com/uselagoon/lagoon-images" repository="https://github.com/uselagoon/lagoon-images"
 
 ENV LAGOON=commons
 

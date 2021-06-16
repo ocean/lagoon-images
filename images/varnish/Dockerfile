@@ -2,7 +2,7 @@ ARG IMAGE_REPO
 FROM ${IMAGE_REPO:-lagoon}/commons as commons
 
 
-FROM alpine:3.7 as vmod
+FROM alpine:3.13 as vmod
 ENV LIBVMOD_DYNAMIC_VERSION=5.2
 ENV LIBVMOD_BODYACCESS_VERSION=5.0
 RUN apk --no-cache add varnish varnish-dev automake autoconf libtool python py-docutils make curl
@@ -15,7 +15,7 @@ RUN cd /tmp && curl -sSLO https://github.com/aondio/libvmod-bodyaccess/archive/$
   unzip ${LIBVMOD_BODYACCESS_VERSION}.zip && cd libvmod-bodyaccess-${LIBVMOD_BODYACCESS_VERSION} && \
   ./autogen.sh && ./configure && make && make install
 
-FROM alpine:3.7
+FROM alpine:3.13
 LABEL org.opencontainers.image.authors="The Lagoon Authors" maintainer="The Lagoon Authors"
 LABEL org.opencontainers.image.source="https://github.com/uselagoon/lagoon-images" repository="https://github.com/uselagoon/lagoon-images"
 

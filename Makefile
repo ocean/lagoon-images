@@ -51,11 +51,11 @@ DESTINATION_TAG ?= latest
 # Local environment
 ARCH := $(shell uname | tr '[:upper:]' '[:lower:]')
 # LAGOON_VERSION := $(shell git describe --tags --exact-match 2>/dev/null || echo development )
-LAGOON_VERSION := 21.3.0
+LAGOON_VERSION := 21.6.0
 DOCKER_DRIVER := $(shell docker info -f '{{.Driver}}')
 
 # Name of the Branch we are currently in
-BRANCH_NAME := 21.3.0
+BRANCH_NAME := 21.6.0
 
 # Init the file that is used to hold the image tag cross-reference table
 $(shell >build.txt)
@@ -86,7 +86,6 @@ docker_publish_amazeeio = docker tag $(CI_BUILD_TAG)/$(1) amazeeio/$(2) && docke
 ####### Base Images are the base for all other images and are also published for clients to use during local development
 
 unversioned-images :=		commons \
-							mongo \
 							nginx \
 							nginx-drupal \
 							toolbox \
@@ -120,7 +119,7 @@ $(build-images):
 # 2. Dockerfiles of the Images itself, will cause make to rebuild the images if something has
 #    changed on the Dockerfiles
 build/commons: images/commons/Dockerfile
-build/mongo: build/commons images/mongo/Dockerfile
+# build/mongo: build/commons images/mongo/Dockerfile
 build/nginx: build/commons images/nginx/Dockerfile
 build/nginx-drupal: build/nginx images/nginx-drupal/Dockerfile
 build/toolbox: build/commons build/mariadb-10.5 images/toolbox/Dockerfile

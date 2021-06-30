@@ -69,7 +69,7 @@ $(shell >scan.txt)
 # Docker Build Context
 docker_build = docker buildx build $(DOCKER_BUILD_PARAMS) --label lagoon.version=$(LAGOON_VERSION) --build-arg LAGOON_VERSION=$(LAGOON_VERSION) --build-arg IMAGE_REPO=$(CI_BUILD_TAG) -t $(CI_BUILD_TAG)/$(1):$(LAGOON_VERSION) -t $(CI_BUILD_TAG)/$(1) -f $(2) $(3)
 
-scan_image = docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(HOME)/Library/Caches:/root/.cache/ oceanic/trivy --timeout 5m0s $(CI_BUILD_TAG)/$(1):$(LAGOON_VERSION) >> scan.txt
+scan_image = docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(HOME)/Library/Caches:/root/.cache/ aquasec/trivy --timeout 5m0s $(CI_BUILD_TAG)/$(1):$(LAGOON_VERSION) >> scan.txt
 
 # Tags an image with the `testlagoon` repository and pushes it
 docker_publish_testlagoon = docker tag $(CI_BUILD_TAG)/$(1) oceanic/lagoon-$(2) && docker push oceanic/lagoon-$(2) | cat
@@ -148,16 +148,13 @@ versioned-images := 		php-7.3-fpm \
 							node-12 \
 							node-14 \
 							node-16 \
-							node-10-builder \
 							node-12-builder \
 							node-14-builder \
 							node-16-builder \
-							solr-5.5 \
 							solr-6.6 \
 							solr-7.7 \
 							solr-6.6-drupal \
 							solr-7.7-drupal \
-							solr-6.6-ckan \
 							redis-6 \
 							redis-6-persistent \
 							varnish-6 \
@@ -199,7 +196,7 @@ $(build-versioned-images):
 	$(call docker_build,$(image),images/$(folder)/$(if $(version),$(version).)Dockerfile,images/$(folder))
 # Populate the cross-reference table
 	$(shell echo $(image),$(legacytag) >> build.txt)
-#scan created images with Trivy
+# Scan created images with Trivy
 	$(call scan_image,$(image),)
 # Touch an empty file which make itself is using to understand when the image has been last built
 	touch $@

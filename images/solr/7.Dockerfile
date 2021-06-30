@@ -24,11 +24,18 @@ ENV TMPDIR=/tmp \
     # When Bash is invoked as non-interactive (like `bash -c command`) it sources a file that is given in `BASH_ENV`
     BASH_ENV=/home/.bashrc
 
-ENV TINI_VERSION v0.19.0
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /sbin/tini
-
 # we need root for the fix-permissions to work
 USER root
+
+ENV TINI_VERSION v0.19.0
+RUN arch="$(dpkg --print-architecture)"; \
+    case "$arch" in \
+        'amd64'|'arm64') \
+            echo >&2 "Downloading '$arch' version of tini."; \
+            ;; \
+        *) echo >&2 "error: unsupported architecture: '$arch'"; exit 1 ;; \
+    esac; \
+    wget -O /sbin/tini https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${arch}
 
 RUN apt-get -y update && apt-get -y install \
     busybox \

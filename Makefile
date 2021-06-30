@@ -211,7 +211,7 @@ $(build-versioned-images):
 	$(call docker_build,$(image),images/$(folder)/$(if $(version),$(version).)Dockerfile,images/$(folder))
 # Populate the cross-reference table
 	$(shell echo $(image),$(legacytag) >> build.txt)
-#scan created images with Trivy
+# Scan created images with Trivy
 	$(call scan_image,$(image),)
 # Touch an empty file which make itself is using to understand when the image has been last built
 	touch $@

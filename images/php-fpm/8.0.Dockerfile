@@ -139,6 +139,7 @@ RUN if [ "$TARGETARCH" = "amd64" ] ; then \
     # && fix-permissions /usr/local/etc/ ; fi
 
 # Add blackfire probe.
+ENV BLACKFIRE_VERSION=2.4.2
 RUN version=$(php -r "echo PHP_MAJOR_VERSION.PHP_MINOR_VERSION;") \
     && architecture=$(case $(uname -m) in i386 | i686 | x86) echo "i386" ;; x86_64 | amd64) echo "amd64" ;; aarch64 | arm64 | armv8) echo "arm64" ;; *) echo "amd64" ;; esac) \
     && mkdir -p /blackfire \

@@ -39,6 +39,7 @@ RUN arch="$(dpkg --print-architecture)"; \
 
 RUN apt-get -y update && apt-get -y install \
     busybox \
+    file \
     && rm -rf /var/lib/apt/lists/*
 
 # needed to fix dash upgrade - man files are removed from slim images

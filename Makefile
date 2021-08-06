@@ -51,11 +51,11 @@ DESTINATION_TAG ?= latest
 # Local environment
 ARCH := $(shell uname | tr '[:upper:]' '[:lower:]')
 # LAGOON_VERSION := $(shell git describe --tags --exact-match 2>/dev/null || echo development )
-LAGOON_VERSION := 21.6.0
+LAGOON_VERSION := 21.7.0
 DOCKER_DRIVER := $(shell docker info -f '{{.Driver}}')
 
 # Name of the Branch we are currently in
-BRANCH_NAME := 21.6.0
+BRANCH_NAME := 21.7.0
 
 # Skip image scanning by default to make building images substantially faster
 SCAN_IMAGES ?= false

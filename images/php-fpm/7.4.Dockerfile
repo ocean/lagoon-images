@@ -121,8 +121,8 @@ RUN version=$(php -r "echo PHP_MAJOR_VERSION.PHP_MINOR_VERSION;") \
     && tar zxpf /blackfire/blackfire-probe.tar.gz -C /blackfire \
     && mv /blackfire/blackfire-*.so $(php -r "echo ini_get('extension_dir');")/blackfire.so \
     && fix-permissions /usr/local/etc/php/conf.d/ \
-    && curl -A "Docker" -o /blackfire/blackfire-linux_amd64.tar.gz -D - -L -s https://packages.blackfire.io/binaries/blackfire/${BLACKFIRE_VERSION}/blackfire-linux_amd64.tar.gz \
-    && tar zxpf /blackfire/blackfire-linux_amd64.tar.gz -C /blackfire \
+    && curl -A "Docker" -o /blackfire/blackfire-linux_$architecture.tar.gz -D - -L -s https://packages.blackfire.io/binaries/blackfire/${BLACKFIRE_VERSION}/blackfire-linux_$architecture.tar.gz \
+    && tar zxpf /blackfire/blackfire-linux_$architecture.tar.gz -C /blackfire \
     && mv /blackfire/blackfire /bin/blackfire \
     && chmod +x /bin/blackfire \
     && mkdir -p /etc/blackfire \

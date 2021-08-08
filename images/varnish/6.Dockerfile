@@ -1,10 +1,10 @@
 ARG IMAGE_REPO
 FROM ${IMAGE_REPO:-lagoon}/commons as commons
 
-FROM varnish:6.5 as vmod
-ENV LIBVMOD_DYNAMIC_VERSION=6.5
-ENV VARNISH_MODULES_VERSION=6.5
-RUN apt-get update && apt-get -y install build-essential automake libtool python-docutils libpcre3-dev varnish-dev curl zip
+FROM varnish:6.6 as vmod
+ENV LIBVMOD_DYNAMIC_VERSION=6.6
+ENV VARNISH_MODULES_VERSION=6.6
+RUN apt-get update && apt-get -y install build-essential automake libtool python-docutils libpcre3-dev varnish-dev curl zip tini=0.19.0
 
 RUN cd /tmp && curl -sSLO https://github.com/nigoroll/libvmod-dynamic/archive/${LIBVMOD_DYNAMIC_VERSION}.zip && \
   unzip ${LIBVMOD_DYNAMIC_VERSION}.zip && cd libvmod-dynamic-${LIBVMOD_DYNAMIC_VERSION} && \
@@ -14,7 +14,7 @@ RUN cd /tmp && curl -sSLO https://github.com/varnish/varnish-modules/archive/${V
   unzip ${VARNISH_MODULES_VERSION}.zip && cd varnish-modules-${VARNISH_MODULES_VERSION} && \
   ./bootstrap && ./configure && make && make install
 
-FROM varnish:6.5
+FROM varnish:6.6
 
 LABEL org.opencontainers.image.authors="The Lagoon Authors" maintainer="The Lagoon Authors"
 LABEL org.opencontainers.image.source="https://github.com/uselagoon/lagoon-images" repository="https://github.com/uselagoon/lagoon-images"
@@ -24,13 +24,10 @@ ENV LAGOON=varnish
 ARG LAGOON_VERSION
 ENV LAGOON_VERSION=$LAGOON_VERSION
 
-ENV TINI_VERSION v0.19.0
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /sbin/tini
-
 # Copy commons files
 COPY --from=commons /lagoon /lagoon
 COPY --from=commons /bin/fix-permissions /bin/ep /bin/docker-sleep /bin/
-#COPY --from=commons /sbin/tini /sbin/
+COPY --from=vmod /sbin/tini /sbin/
 COPY --from=commons /home /home
 
 ENV TMPDIR=/tmp \

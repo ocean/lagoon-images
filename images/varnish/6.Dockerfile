@@ -29,13 +29,10 @@ ENV LAGOON=varnish
 ARG LAGOON_VERSION
 ENV LAGOON_VERSION=$LAGOON_VERSION
 
-ENV TINI_VERSION v0.19.0
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /sbin/tini
-
 # Copy commons files
 COPY --from=commons /lagoon /lagoon
 COPY --from=commons /bin/fix-permissions /bin/ep /bin/docker-sleep /bin/
-#COPY --from=commons /sbin/tini /sbin/
+COPY --from=vmod /sbin/tini /sbin/
 COPY --from=commons /home /home
 
 ENV TMPDIR=/tmp \

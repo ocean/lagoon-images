@@ -1,13 +1,5 @@
-FROM golang:alpine3.14 AS builder
-RUN GIT_TAG=github.com/smlx/go-crond@custom-workdir-mod-update GIT_COMMIT=1b81c05ef34903427ed06a56c26cc268a0377b83; \
-    GO111MODULE=on CGO_ENABLED=0 go get -ldflags "-X main.gitTag=$GIT_TAG -X main.gitCommit=$GIT_COMMIT" \
-    github.com/smlx/go-crond@$GIT_COMMIT
-RUN GIT_TAG=github.com/kreuzwerker/envplate@1.0.0-RC1 GIT_COMMIT=977cb694fd31dd89e9326fe4c85572a147011c8f; \
-    go get -ldflags "-X=main.build=$GIT_COMMIT -X=main.version=$GIT_TAG" \
-    github.com/kreuzwerker/envplate@$GIT_COMMIT \
-    && cd /go/pkg/mod/github.com/kreuzwerker/envplate* \
-    && go mod init github.com/kreuzwerker/envplate \
-    && go install -mod=mod ./bin/ep.go
+FROM webdevops/go-crond:21.5.0-alpine AS go-crond
+FROM amazeeio/envplate:dev AS envplate
 
 FROM alpine:3.14.2
 
@@ -21,8 +13,8 @@ RUN mkdir -p /lagoon/bin
 COPY fix-permissions docker-sleep entrypoint-readiness wait-for /bin/
 COPY .bashrc /home/.bashrc
 
-COPY --from=builder /go/bin/go-crond /lagoon/bin/cron
-COPY --from=builder /go/bin/ep /bin/ep
+COPY --from=go-crond /usr/local/bin/go-crond /lagoon/bin/cron
+COPY --from=envplate /usr/local/bin/ep /bin/ep
 
 RUN apk update \
     && apk upgrade \

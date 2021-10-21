@@ -39,7 +39,7 @@ SHELL := /bin/bash
 #######
 
 # Parameter for all `docker build` commands, can be overwritten by passing `DOCKER_BUILD_PARAMS=` via the `-e` option
-DOCKER_BUILD_PARAMS := --platform linux/arm64 --push --no-cache
+DOCKER_BUILD_PARAMS := 
 
 # On CI systems like Jenkins we need a way to run multiple testings at the same time. We expect the
 # CI systems to define an Environment variable CI_BUILD_TAG which uniquely identifies each build.
@@ -48,25 +48,28 @@ CI_BUILD_TAG ?= oceaniclagoon
 DESTINATION_REPO ?= testlagoon
 DESTINATION_TAG ?= latest
 
+REGISTRY_FOUR := true
+
 # Local environment
 ARCH := $(shell uname | tr '[:upper:]' '[:lower:]')
 # LAGOON_VERSION := $(shell git describe --tags --exact-match 2>/dev/null || echo development )
-LAGOON_VERSION := 21.7.0
+LAGOON_VERSION := 21.9.0
 DOCKER_DRIVER := $(shell docker info -f '{{.Driver}}')
 
 # Name of the Branch we are currently in
-BRANCH_NAME := 21.7.0
+BRANCH_NAME := 21.9.0
 
 # Only set this to false when ready to push images to dockerhub
-PUBLISH_IMAGES ?= false
+PUBLISH_IMAGES ?= true
 
-TEMPFILE := $(shell mktemp build.XXXX -u)
+# TEMPFILE := $(shell mktemp build.XXXX)
+TEMPFILE := build.txt
 
 # Skip image scanning by default to make building images substantially faster
 SCAN_IMAGES ?= false
 
 # Init the file that is used to hold the image tag cross-reference table
-# $(shell >build.txt)
+$(shell >build.txt)
 $(shell >scan.txt)
 
 #######
@@ -104,8 +107,19 @@ docker_buildx_three = docker buildx build $(DOCKER_BUILD_PARAMS) \
 						-t testlagoon/$(1)-test:$(BRANCH_NAME) \
 						-f $(2) $(3)
 
+docker_buildx_four = docker buildx build $(DOCKER_BUILD_PARAMS) \
+						--platform linux/arm64 \
+						--build-arg LAGOON_VERSION=$(LAGOON_VERSION) \
+						--build-arg IMAGE_REPO=oceaniclagoon \
+						--push \
+						-t oceaniclagoon/$(1):$(LAGOON_VERSION) \
+						-t oceaniclagoon/$(1):latest \
+						-f $(2) $(3)
+
 ifeq ($(PUBLISH_IMAGES),true)
-	ifdef REGISTRY_THREE
+	ifdef REGISTRY_FOUR
+		docker_build = $(docker_buildx_four)
+	else ifdef REGISTRY_THREE
 		docker_build = $(docker_buildx_three)
 	else ifdef REGISTRY_TWO
 		docker_build = $(docker_buildx_two)
@@ -146,10 +160,7 @@ docker_pull:
 unversioned-images :=		commons \
 							nginx \
 							nginx-drupal \
-							mongo \
-							toolbox \
-							rabbitmq \
-							rabbitmq-cluster
+							toolbox
 
 # base-images is a variable that will be constantly filled with all base image there are
 base-images += $(unversioned-images)
@@ -169,7 +180,7 @@ $(build-images):
 #scan created image with Trivy
 #	$(call scan_image,$(image),)
 # Touch an empty file which make itself is using to understand when the image has been last build
-#	touch $@
+	touch $@
 
 # Define dependencies of Base Images so that make can build them in the right order. There are two
 # types of Dependencies
@@ -182,8 +193,8 @@ build/commons: images/commons/Dockerfile
 build/nginx: build/commons images/nginx/Dockerfile
 build/nginx-drupal: build/nginx images/nginx-drupal/Dockerfile
 build/toolbox: build/commons build/mariadb-10.5 images/toolbox/Dockerfile
-build/rabbitmq: build/commons images/rabbitmq/Dockerfile
-build/rabbitmq-cluster: build/rabbitmq images/rabbitmq-cluster/Dockerfile
+# build/rabbitmq: build/commons images/rabbitmq/Dockerfile
+# build/rabbitmq-cluster: build/rabbitmq images/rabbitmq-cluster/Dockerfile
 
 #######
 ####### Multi-version Images
@@ -209,12 +220,6 @@ versioned-images := 		php-7.3-fpm \
 							node-16-builder \
 							solr-7.7 \
 							solr-7.7-drupal \
-							elasticsearch-6 \
-							elasticsearch-7 \
-							kibana-6 \
-							kibana-7 \
-							logstash-6 \
-							logstash-7 \
 							postgres-12 \
 							redis-6 \
 							redis-6-persistent \
@@ -260,7 +265,7 @@ $(build-versioned-images):
 #scan created images with Trivy
 #	$(call scan_image,$(image),)
 # Touch an empty file which make itself is using to understand when the image has been last built
-#	touch $@
+	touch $@
 
 base-images-with-versions += $(versioned-images)
 base-images-with-versions += $(default-versioned-images)

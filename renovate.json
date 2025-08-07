@@ -1,53 +1,128 @@
 {
   "baseBranches": [
     "main",
-    "testing/alpine_next"
+    "testing/alpine_next",
+    "testing/renovate"
   ],
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "github>whitesource/merge-confidence:beta",
-    "config:base",
+    "mergeConfidence:all-badges",
+    "config:recommended",
     ":disableRateLimiting"
   ],
-  "labels": ["dependencies"],
+  "labels": [
+    "dependencies"
+  ],
   "dependencyDashboard": true,
   "separateMajorMinor": true,
   "separateMinorPatch": true,
   "separateMultipleMajor": true,
-  "regexManagers": [
+  "customManagers": [
     {
-      "fileMatch": ["(^|/|\\.)Dockerfile$"],
-      "matchStrings": ["pecl install -f apcu-(?<currentValue>.*?) "],
+      "customType": "regex",
+      "fileMatch": [
+        "(^|/|\\.)Dockerfile$"
+      ],
+      "matchStrings": [
+        "pecl install -f apcu-(?<currentValue>.*?) ",
+        "install-php-extensions apcu-(?<currentValue>.*?) "
+      ],
       "depNameTemplate": "krakjoe/apcu",
-      "datasourceTemplate": "github-tags"
+      "datasourceTemplate": "github-releases"
     },
     {
-      "fileMatch": ["(^|/|\\.)Dockerfile$"],
-      "matchStrings": ["pecl install -f imagick-(?<currentValue>.*?) "],
+      "customType": "regex",
+      "fileMatch": [
+        "(^|/|\\.)Dockerfile$"
+      ],
+      "matchStrings": [
+        "pecl install -f imagick-(?<currentValue>.*?) ",
+        "install-php-extensions imagick-(?<currentValue>.*?) "
+      ],
       "depNameTemplate": "Imagick/imagick",
       "datasourceTemplate": "github-tags"
     },
     {
-      "fileMatch": ["(^|/|\\.)Dockerfile$"],
-      "matchStrings": ["pecl install -f redis-(?<currentValue>.*?) "],
+      "customType": "regex",
+      "fileMatch": [
+        "(^|/|\\.)Dockerfile$"
+      ],
+      "matchStrings": [
+        "pecl install -f redis-(?<currentValue>.*?) ",
+        "install-php-extensions redis-(?<currentValue>.*?) "
+      ],
       "depNameTemplate": "phpredis/phpredis",
       "datasourceTemplate": "github-tags"
     },
     {
-      "fileMatch": ["(^|/|\\.)Dockerfile$"],
-      "matchStrings": ["pecl install -f xdebug-(?<currentValue>.*?) "],
+      "customType": "regex",
+      "fileMatch": [
+        "(^|/|\\.)Dockerfile$"
+      ],
+      "matchStrings": [
+        "pecl install -f xdebug-(?<currentValue>.*?) ",
+        "install-php-extensions xdebug-(?<currentValue>.*?) "
+      ],
       "depNameTemplate": "xdebug/xdebug",
       "datasourceTemplate": "github-tags"
     },
     {
-      "fileMatch": ["(^|/|\\.)Dockerfile$"],
-      "matchStrings": ["pecl install -f yaml-(?<currentValue>.*?) "],
+      "customType": "regex",
+      "fileMatch": [
+        "(^|/|\\.)Dockerfile$"
+      ],
+      "matchStrings": [
+        "pecl install -f yaml-(?<currentValue>.*?) ",
+        "install-php-extensions yaml-(?<currentValue>.*?) "
+      ],
       "depNameTemplate": "php/pecl-file_formats-yaml",
       "datasourceTemplate": "github-tags"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "(^|/|\\.)Dockerfile$"
+      ],
+      "matchStrings": [
+        "ENV BLACKFIRE_VERSION=(?<currentValue>.*?)\n"
+      ],
+      "depNameTemplate": "blackfireio/docker",
+      "datasourceTemplate": "github-tags"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "(^|/|\\.)Dockerfile$"
+      ],
+      "matchStrings": [
+        "ENV NEWRELIC_VERSION=(?<currentValue>.*?)\n"
+      ],
+      "depNameTemplate": "newrelic/newrelic-php-agent",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "(^|/|\\.)Dockerfile$"
+      ],
+      "matchStrings": [
+        "curl.*https://github.com/(?<depName>.*?)/releases/download/(?<currentValue>.*?)/.*.phar.*\n"
+      ],
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": [
+        "(^|/|\\.)Dockerfile$"
+      ],
+      "matchStrings": [
+        "php.*--require=(?<depName>.*?):(?<currentValue>.*?)\\s.*\n"
+      ],
+      "datasourceTemplate": "packagist"
     }
   ],
   "packageRules": [
-    { 
+    {
       "enabled": true,
       "matchDatasources": [
         "github-releases",
@@ -58,11 +133,25 @@
       ],
       "extractVersion": "^v(?<version>.*)$"
     },
-    { 
+    {
       "enabled": true,
       "matchDatasources": [
         "github-releases",
-        "github-tags"
+        "github-tags",
+        "packagist"
+      ],
+      "matchPackageNames": [
+        "newrelic/newrelic-php-agent"
+      ],
+      "extractVersion": "^v(?<version>.*)$",
+      "versioning": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+).(?<build>\\d+)$"
+    },
+    {
+      "enabled": true,
+      "matchDatasources": [
+        "github-releases",
+        "github-tags",
+        "packagist"
       ],
       "matchUpdateTypes": [
         "minor",
@@ -72,15 +161,21 @@
         "Imagick/imagick",
         "phpredis/phpredis",
         "xdebug/xdebug",
-        "php/pecl-file_formats-yaml"
+        "php/pecl-file_formats-yaml",
+        "composer/composer",
+        "drush/drush",
+        "hechoendrupal/drupal-console-launcher",
+        "drush-ops/drush-launcher",
+        "blackfireio/docker"
       ]
     },
-    { 
+    {
       "enabled": false,
-      "groupName": "Disable PECL major updates",
+      "groupName": "Disable PHP package/extension major updates",
       "matchDatasources": [
         "github-releases",
-        "github-tags"
+        "github-tags",
+        "packagist"
       ],
       "matchUpdateTypes": [
         "major"
@@ -90,7 +185,12 @@
         "Imagick/imagick",
         "phpredis/phpredis",
         "xdebug/xdebug",
-        "php/pecl-file_formats-yaml"
+        "php/pecl-file_formats-yaml",
+        "composer/composer",
+        "drush/drush",
+        "hechoendrupal/drupal-console-launcher",
+        "drush-ops/drush-launcher",
+        "blackfireio/docker"
       ]
     },
     {
@@ -102,12 +202,26 @@
         "patch"
       ],
       "matchPackageNames": [
+        "mariadb",
+        "mysql",
         "php",
-        "python"
+        "python",
+        "ruby"
       ]
     },
     {
-      "enabled": false,
+      "enabled": true,
+      "matchDatasources": [
+        "docker"
+      ],
+      "matchPackageNames": [
+        "openresty/openresty"
+      ],
+      "versioning": "regex:^(\\d)\\.(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-(?<build>\\d+)-(?<compatibility>.*)$"
+    },
+    {
+      "draftPR": true,
+      "groupName": "Draft major and minor update PRs - packages update only patch",
       "matchDatasources": [
         "docker"
       ],
@@ -116,8 +230,11 @@
         "minor"
       ],
       "matchPackageNames": [
+        "mariadb",
+        "mysql",
         "php",
-        "python"
+        "python",
+        "ruby"
       ]
     },
     {
@@ -131,14 +248,17 @@
       ],
       "matchPackageNames": [
         "node",
+        "opensearchproject/opensearch",
         "postgres",
         "redis",
         "solr",
+        "valkey/valkey",
         "varnish"
       ]
     },
     {
-      "enabled": false,
+      "draftPR": true,
+      "groupName": "Draft major release PRs - packages update only minor",
       "matchDatasources": [
         "docker"
       ],
@@ -147,36 +267,12 @@
       ],
       "matchPackageNames": [
         "node",
+        "opensearchproject/opensearch",
         "postgres",
         "redis",
         "solr",
+        "valkey/valkey",
         "varnish"
-      ]
-    },
-    {
-      "groupName": "ELK Stack",
-      "allowedVersions": "<7.11.0",
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchPackageNames": [
-        "docker.elastic.co/elasticsearch/elasticsearch",
-        "docker.elastic.co/logstash/logstash",
-        "docker.elastic.co/kibana/kibana"
-      ]
-    },
-    {
-      "enabled": false,
-      "matchDatasources": [
-        "docker"
-      ],
-      "matchUpdateTypes": [
-        "major"
-      ],
-      "matchPackageNames": [
-        "docker.elastic.co/elasticsearch/elasticsearch",
-        "docker.elastic.co/logstash/logstash",
-        "docker.elastic.co/kibana/kibana"
       ]
     },
     {

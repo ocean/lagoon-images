@@ -1,15 +1,18 @@
 ARG IMAGE_REPO
-FROM ${IMAGE_REPO:-lagoon}/commons as commons
-# Alpine 3.12 per https://github.com/openresty/docker-openresty/blob/1.19.3.1-0/alpine/Dockerfile
-FROM openresty/openresty:1.19.9.1-alpine
-
-LABEL org.opencontainers.image.authors="The Lagoon Authors" maintainer="The Lagoon Authors"
-LABEL org.opencontainers.image.source="https://github.com/uselagoon/lagoon-images" repository="https://github.com/uselagoon/lagoon-images"
-
-ENV LAGOON=nginx
+FROM ${IMAGE_REPO:-lagoon}/commons AS commons
+FROM openresty/openresty:1.25.3.2-5-alpine
 
 ARG LAGOON_VERSION
 ENV LAGOON_VERSION=$LAGOON_VERSION
+LABEL org.opencontainers.image.authors="The Lagoon Authors"
+LABEL org.opencontainers.image.source="https://github.com/uselagoon/lagoon-images/blob/main/images/nginx/Dockerfile"
+LABEL org.opencontainers.image.url="https://github.com/uselagoon/lagoon-images"
+LABEL org.opencontainers.image.version="${LAGOON_VERSION}"
+LABEL org.opencontainers.image.description="OpenResty (Nginx) image optimised for running in Lagoon in production and locally"
+LABEL org.opencontainers.image.title="uselagoon/nginx"
+LABEL org.opencontainers.image.base.name="docker.io/openresty/openresty:1.25-alpine"
+
+ENV LAGOON=nginx
 
 # Copy commons files
 COPY --from=commons /lagoon /lagoon
@@ -28,7 +31,12 @@ ENV TMPDIR=/tmp \
     # When Bash is invoked as non-interactive (like `bash -c command`) it sources a file that is given in `BASH_ENV`
     BASH_ENV=/home/.bashrc
 
-RUN apk add --no-cache openssl
+RUN apk update \
+    && apk add --no-cache \
+        openssl \
+        rsync \
+        tar \
+    && rm -rf /var/cache/apk/*
 
 RUN rm -Rf /etc/nginx && ln -s /usr/local/openresty/nginx/conf /etc/nginx
 
@@ -37,6 +45,7 @@ COPY fastcgi.conf /etc/nginx/fastcgi.conf
 COPY fastcgi.conf /etc/nginx/fastcgi_params
 COPY helpers/ /etc/nginx/helpers/
 COPY static-files.conf /etc/nginx/conf.d/app.conf
+COPY basic_auth.conf /etc/nginx/conf.d/basic_auth.conf
 COPY redirects-map.conf /etc/nginx/redirects-map.conf
 COPY healthcheck/healthz.locations healthcheck/healthz.locations.php.disable /etc/nginx/conf.d/
 

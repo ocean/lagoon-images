@@ -1,19 +1,33 @@
 ARG IMAGE_REPO
-FROM ${IMAGE_REPO:-lagoon}/commons as commons
-# alpine 3.12 as per https://github.com/docker-library/rabbitmq/blob/master/3.8/alpine/Dockerfile
-FROM rabbitmq:3.8.22-management-alpine
+FROM ${IMAGE_REPO:-lagoon}/commons AS commons
+FROM rabbitmq:3.10.25-management-alpine
 
 ARG LAGOON_VERSION
 ENV LAGOON_VERSION=$LAGOON_VERSION
+LABEL org.opencontainers.image.authors="The Lagoon Authors"
+LABEL org.opencontainers.image.source="https://github.com/uselagoon/lagoon-images/blob/main/images/rabbitmq/Dockerfile"
+LABEL org.opencontainers.image.url="https://github.com/uselagoon/lagoon-images"
+LABEL org.opencontainers.image.version="${LAGOON_VERSION}"
+LABEL org.opencontainers.image.description="RabbitMQ image optimised for running in Lagoon in production and locally"
+LABEL org.opencontainers.image.title="uselagoon/rabbitmq"
+LABEL org.opencontainers.image.base.name="docker.io/rabbitmq:3-management-alpine"
+
+ENV LAGOON=rabbitmq
+
+RUN apk add --no-cache \
+        rsync \
+        tar
 
 ENV RABBITMQ_DEFAULT_USER='guest' \
     RABBITMQ_DEFAULT_PASS='guest'\
     RABBITMQ_DEFAULT_HA_PATTERN='^$'\
     RABBITMQ_DEFAULT_VHOST='/'
 
-COPY --from=commons /bin/ep /bin/fix-permissions /bin/
+COPY --from=commons /lagoon /lagoon
+COPY --from=commons /bin/fix-permissions /bin/ep /bin/docker-sleep /bin/wait-for /bin/
 
-RUN wget -O /plugins/rabbitmq_delayed_message_exchange-3.8.17.ez "https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/3.8.17/rabbitmq_delayed_message_exchange-3.8.17.8f537ac.ez" \
+RUN wget -P /plugins https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/3.10.2/rabbitmq_delayed_message_exchange-3.10.2.ez \
+    && chown rabbitmq:rabbitmq /plugins/rabbitmq_delayed_message_exchange-* \
     && rabbitmq-plugins enable --offline rabbitmq_delayed_message_exchange rabbitmq_prometheus;
 
 # Copy startup schema with vhost, users, permissions and policies

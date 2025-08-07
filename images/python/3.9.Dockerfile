@@ -1,10 +1,17 @@
 ARG IMAGE_REPO
-FROM ${IMAGE_REPO:-lagoon}/commons as commons
+FROM ${IMAGE_REPO:-lagoon}/commons AS commons
 
-FROM python:3.9.7-alpine3.14
+FROM python:3.9.23-alpine3.21
 
-LABEL org.opencontainers.image.authors="The Lagoon Authors" maintainer="The Lagoon Authors"
-LABEL org.opencontainers.image.source="https://github.com/uselagoon/lagoon-images" repository="https://github.com/uselagoon/lagoon-images"
+ARG LAGOON_VERSION
+ENV LAGOON_VERSION=$LAGOON_VERSION
+LABEL org.opencontainers.image.authors="The Lagoon Authors"
+LABEL org.opencontainers.image.source="https://github.com/uselagoon/lagoon-images/blob/main/images/python/3.9.Dockerfile"
+LABEL org.opencontainers.image.url="https://github.com/uselagoon/lagoon-images"
+LABEL org.opencontainers.image.version="${LAGOON_VERSION}"
+LABEL org.opencontainers.image.description="Python 3.9 image optimised for running in Lagoon in production and locally"
+LABEL org.opencontainers.image.title="uselagoon/python-3.9"
+LABEL org.opencontainers.image.base.name="docker.io/python:3.9-alpine3.21"
 
 ENV LAGOON=python
 
@@ -25,11 +32,17 @@ ENV TMPDIR=/tmp \
     # When Bash is invoked as non-interactive (like `bash -c command`) it sources a file that is given in `BASH_ENV`
     BASH_ENV=/home/.bashrc
 
-RUN apk add --no-cache --virtual .build-deps \
-      build-base \
+RUN apk update \
+    && apk add --no-cache --virtual .build-deps \
+        build-base \
     && pip install --upgrade pip \
     && pip install virtualenv \
-    && apk del .build-deps
+    && apk del \
+        .build-deps \
+    && apk add --no-cache \
+        rsync \
+        tar \
+    && rm -rf /var/cache/apk/*
 
 # Make sure shells are not running forever
 COPY 80-shell-timeout.sh /lagoon/entrypoints/
